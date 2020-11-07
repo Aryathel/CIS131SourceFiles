@@ -1,6 +1,6 @@
 /**
  *  <h1>Coordinate 2D<h1>
- *  <p>A simple class for creating and accessing a 2D coordinate.</p>
+ *  <p>A simple class for creating and accessing a 2D coordinate. This is an edit.</p>
  *  @author Houghton Mayfield
  *  @version 1.0
  *  @since 2020-09-16
