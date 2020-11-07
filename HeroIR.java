@@ -3,7 +3,6 @@
  *  <p>
  *      This program is used to managing user input and base level input validation.
  *      This program is based of of the work of David Freitag's "IR4.java".
- Testing
  *  </p>
  *  @author Houghton Mayfield
  *  @version 1.1
