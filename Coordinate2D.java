@@ -1,4 +1,5 @@
 /**
+ *  <h1>Coordinate 2D<h1>
  *  <p>A simple class for creating and accessing a 2D coordinate.</p>
  *  @author Houghton Mayfield
  *  @version 1.0
