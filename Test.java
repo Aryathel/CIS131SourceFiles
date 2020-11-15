@@ -1,7 +1,7 @@
-import static java.lang.System.arraycopy;
-
 public class Test {
     public static void main(String[] args) {
-        System.out.println(2 * 0.25);
+        String s1 = new String("Java");
+        String s2 = s1;
+        System.out.print((s1 == s2) + " " + (s1.equals(s2)));
     }
 }

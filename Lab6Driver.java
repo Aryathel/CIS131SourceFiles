@@ -18,7 +18,6 @@ public class Lab6Driver {
         class1.setMeetingDays("N/A");
         class1.setMeetingTimes("N/A");
         class1.setCapacity(30);
-        class1.setEnrollment(30);
         class1.setInstructorID(654);
 
         System.out.println(class1.toString());
@@ -26,7 +25,7 @@ public class Lab6Driver {
         ClassSection class2 = new ClassSection(
                 20123, "CIS", 131, "Classroom",
                 "East", "TTH", "3:15 to 5:30pm",
-                30, 30, 654
+                30, 654
         );
 
         System.out.println(class2.toString());

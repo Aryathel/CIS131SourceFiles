@@ -10,21 +10,23 @@ public class ParticleLab{
     static final int NBR_COLS  = 180;  //180 
     static final int CELL_SIZE = 800;  //800
     
-    static final String FILE_NAME     = "./src/ParticleLabFile.txt";         //This is the name of the input file.
-    static final String NEW_FILE_NAME = "./src/ParticleLabFileGreatPainting.txt";  //This is the name of the file you are saving.
+    static final String FILE_NAME     = "ParticleLabFileGreatPainting.txt";               //This is the name of the input file.
+    static final String NEW_FILE_NAME = "ParticleLabFileGreatPainting.txt";  //This is the name of the file you are saving.
 
     //add constants for particle types here
     public static final int EMPTY     = 0;
     public static final int METAL     = 1;
     public static final int SAND      = 2;
-    public static final int GRAVITY   = 3;
-    public static final int SAVEFILE  = 4;
+    public static final int WATER     = 3;
+    public static final int GRAVITY   = 4;
+    public static final int SAVEFILE  = 5;
 
     // constants for gravity control
     public static final boolean DOWN = true;
     public static final boolean UP   = false;
     public static final int LEFT     = 1;
     public static final int RIGHT    = 2;
+    public static final int MIDDLE   = 3;
     
     //do not add any more global fields
     private int row = 0;
@@ -49,11 +51,12 @@ public class ParticleLab{
 
     //SandLab constructor - ran when the above lab object is created 
     public ParticleLab(int numRows, int numCols){
-        String[] names = new String[5];
+        String[] names = new String[6];
         
         names[EMPTY]    = "Empty";
         names[METAL]    = "Metal";
         names[SAND]     = "Sand";
+        names[WATER]    = "Water";
         names[GRAVITY]  = "Gravity";
         names[SAVEFILE] = "SaveFile";
         
@@ -98,6 +101,8 @@ public class ParticleLab{
                     display.setColor(i, j, Color.gray);
                 } else if (particleGrid[i][j] == SAND) {
                     display.setColor(i, j, Color.yellow);
+                } else if (particleGrid[i][j] == WATER) {
+                    display.setColor(i, j, Color.blue);
                 }
             }
         }
@@ -107,8 +112,8 @@ public class ParticleLab{
     //called repeatedly.
     //causes one random particle to maybe do something.
     public void step(){
-        int row = getRandomNumber(0, NBR_ROWS);
-        int col = getRandomNumber(0, NBR_COLS);
+        int row = getRandomNumber(0, NBR_ROWS - 1);
+        int col = getRandomNumber(0, NBR_COLS - 1);
 
         // The modifier used to increment a particle vertically or horizontally in the negative or positive direction
         int gravityMod = 1;
@@ -119,6 +124,9 @@ public class ParticleLab{
         if (particleGrid[row][col] == SAND) {
             // Move the particle if it is sand
             moveSand(row, col, gravityMod);
+        } else if (particleGrid[row][col] == WATER) {
+            // Move a water particle
+            moveWater(row, col, gravityMod);
         }
     }
 
@@ -135,11 +143,8 @@ public class ParticleLab{
         newRow = row + gravityMod;
 
         // Wrap the row vertically if necessary
-        if (newRow < 0) {
-            newRow = NBR_ROWS - 1;
-        } else if (newRow == NBR_ROWS) {
-            newRow = 0;
-        }
+        newRow = wrapRow(newRow);
+
 
         // If the new particle locations is empty
         if (particleGrid[newRow][col] == EMPTY) {
@@ -147,7 +152,7 @@ public class ParticleLab{
             particleGrid[newRow][col] = SAND;
         } else {
             // Pick a random direction for the sand particle to move if the next
-            int direction = getRandomNumber(LEFT, RIGHT+1);
+            int direction = getRandomNumber(LEFT, RIGHT);
 
             // Get the modifier for direction based on the random choice
             if (direction == LEFT) {
@@ -160,11 +165,7 @@ public class ParticleLab{
             newCol = col + mod;
 
             // Wrap the column horizontally if necessary
-            if (newCol < 0) {
-                newCol = NBR_COLS - 1;
-            } else if (newCol == NBR_COLS) {
-                newCol = 0;
-            }
+            newCol = wrapCol(newCol);
 
             // Pile the sand diagonally if the space is available
             if (particleGrid[newRow][newCol] == EMPTY) {
@@ -172,6 +173,96 @@ public class ParticleLab{
                 particleGrid[newRow][newCol] = SAND;
             }
         }
+    }
+
+    /** The function used to move a randomly selected water particle.
+     *
+     * @param row The row of the original water particle to be moved.
+     * @param col The column of the original water particle to be moved.
+     * @param gravityMod The modifier which affects the direction of the gravity.
+     */
+    public void moveWater(int row, int col, int gravityMod) {
+        int newRow = row + gravityMod;
+        int newCol = col;
+        int direction;
+
+        // Wrap the row as necessary:
+        newRow = wrapRow(newRow);
+
+        if (particleGrid[newRow][col] == EMPTY) {
+            direction = getWaterDirection();
+            if (direction == LEFT) {
+                newCol = col - 1;
+            } else if (direction == MIDDLE) {
+                newCol = col;
+            } else if (direction == RIGHT) {
+                newCol = col + 1;
+            }
+        } else {
+            newRow = row;
+            direction = getRandomNumber(LEFT, RIGHT);
+            if (direction == LEFT) {
+                newCol = col - 1;
+            } else if (direction == RIGHT) {
+                newCol = col + 1;
+            }
+        }
+
+
+        // Wrap the column as necessary
+        newCol = wrapCol(newCol);
+
+        if (particleGrid[newRow][newCol] == EMPTY) {
+            particleGrid[row][col] = EMPTY;
+            particleGrid[newRow][newCol] = WATER;
+        }
+    }
+
+    /** Get a random direction for the water to fall in.
+     *
+     * @return The direction the water particle will be moving.
+     */
+    public int getWaterDirection() {
+        int selection = getRandomNumber(1, 100);
+        if (selection <= 25) {
+            return LEFT;
+        } else if (selection <= 75) {
+            return MIDDLE;
+        } else {
+            return RIGHT;
+        }
+    }
+
+    /** Wraps the row vertically as necessary.
+     *
+     * @param row The row to check wrapping for.
+     * @return The corrected row value after wrapping.
+     */
+    public int wrapRow(int row) {
+        int newRow = row;
+        if (row < 0) {
+            newRow = NBR_ROWS - 1;
+        } else if (row == NBR_ROWS) {
+            newRow = 0;
+        }
+
+        return newRow;
+    }
+
+    /** Wraps the row vertically as necessary.
+     *
+     * @param col The col to check wrapping for.
+     * @return The corrected col value after wrapping.
+     */
+    public int wrapCol(int col) {
+        int newCol = col;
+        if (col < 0) {
+            newCol = NBR_COLS - 1;
+        } else if (col == NBR_COLS) {
+            newCol = 0;
+        }
+
+        return newCol;
     }
 
     ////////////////////////////////////////////////////
@@ -193,6 +284,7 @@ public class ParticleLab{
     }
     
     public int getRandomNumber (int low, int high){
+        high += 1;
         return (int)(Math.random() * (high - low)) + low;
     }
     
