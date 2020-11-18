@@ -18,8 +18,9 @@ public class ParticleLab{
     public static final int METAL     = 1;
     public static final int SAND      = 2;
     public static final int WATER     = 3;
-    public static final int GRAVITY   = 4;
-    public static final int SAVEFILE  = 5;
+    public static final int OIL       = 4;
+    public static final int GRAVITY   = 5;
+    public static final int SAVEFILE  = 6;
 
     // constants for gravity control
     public static final boolean DOWN = true;
@@ -51,12 +52,13 @@ public class ParticleLab{
 
     //SandLab constructor - ran when the above lab object is created 
     public ParticleLab(int numRows, int numCols){
-        String[] names = new String[6];
+        String[] names = new String[7];
         
         names[EMPTY]    = "Empty";
         names[METAL]    = "Metal";
         names[SAND]     = "Sand";
         names[WATER]    = "Water";
+        names[OIL]      = "Oil";
         names[GRAVITY]  = "Gravity";
         names[SAVEFILE] = "SaveFile";
         
@@ -103,6 +105,8 @@ public class ParticleLab{
                     display.setColor(i, j, Color.yellow);
                 } else if (particleGrid[i][j] == WATER) {
                     display.setColor(i, j, Color.blue);
+                } else if (particleGrid[i][j] == OIL) {
+                    display.setColor(i, j, Color.darkGray);
                 }
             }
         }
@@ -127,6 +131,8 @@ public class ParticleLab{
         } else if (particleGrid[row][col] == WATER) {
             // Move a water particle
             moveWater(row, col, gravityMod);
+        } else if (particleGrid[row][col] == OIL) {
+            moveOil(row, col, gravityMod);
         }
     }
 
@@ -168,9 +174,10 @@ public class ParticleLab{
             newCol = wrapCol(newCol);
 
             // Pile the sand diagonally if the space is available
-            if (particleGrid[newRow][newCol] == EMPTY) {
-                particleGrid[row][col] = EMPTY;
-                particleGrid[newRow][newCol] = SAND;
+            if (particleGrid[newRow][newCol] == EMPTY ||
+                    particleGrid[newRow][newCol] == WATER ||
+                    particleGrid[newRow][newCol] == OIL) {
+                swap(row, col, newRow, newCol);
             }
         }
     }
@@ -189,8 +196,50 @@ public class ParticleLab{
         // Wrap the row as necessary:
         newRow = wrapRow(newRow);
 
+        if (particleGrid[newRow][col] == EMPTY || particleGrid[newRow][col] == OIL) {
+            direction = getLiquidDirection();
+            if (direction == LEFT) {
+                newCol = col - 1;
+            } else if (direction == MIDDLE) {
+                newCol = col;
+            } else if (direction == RIGHT) {
+                newCol = col + 1;
+            }
+        } else {
+            newRow = row;
+            direction = getRandomNumber(LEFT, RIGHT);
+            if (direction == LEFT) {
+                newCol = col - 1;
+            } else if (direction == RIGHT) {
+                newCol = col + 1;
+            }
+        }
+
+
+        // Wrap the column as necessary
+        newCol = wrapCol(newCol);
+        if (particleGrid[newRow][newCol] == EMPTY || particleGrid[newRow][newCol] == OIL) {
+            swap(row, col, newRow, newCol);
+        }
+    }
+
+    /** The function used to move a randomly selected oil particle.
+     * The method is identical to the water method, except it will stop above water.
+     *
+     * @param row The row of the original water particle to be moved.
+     * @param col The column of the original water particle to be moved.
+     * @param gravityMod The modifier which affects the direction of the gravity.
+     */
+    public void moveOil(int row, int col, int gravityMod) {
+        int newRow = row + gravityMod;
+        int newCol = col;
+        int direction;
+
+        // Wrap the row as necessary:
+        newRow = wrapRow(newRow);
+
         if (particleGrid[newRow][col] == EMPTY) {
-            direction = getWaterDirection();
+            direction = getLiquidDirection();
             if (direction == LEFT) {
                 newCol = col - 1;
             } else if (direction == MIDDLE) {
@@ -213,16 +262,21 @@ public class ParticleLab{
         newCol = wrapCol(newCol);
 
         if (particleGrid[newRow][newCol] == EMPTY) {
-            particleGrid[row][col] = EMPTY;
-            particleGrid[newRow][newCol] = WATER;
+            swap(row, col, newRow, newCol);
         }
+    }
+
+    public void swap(int row1, int col1, int row2, int col2) {
+        int tmp = particleGrid[row1][col1];
+        particleGrid[row1][col1] = particleGrid[row2][col2];
+        particleGrid[row2][col2] = tmp;
     }
 
     /** Get a random direction for the water to fall in.
      *
      * @return The direction the water particle will be moving.
      */
-    public int getWaterDirection() {
+    public int getLiquidDirection() {
         int selection = getRandomNumber(1, 100);
         if (selection <= 25) {
             return LEFT;
