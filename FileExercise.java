@@ -16,19 +16,19 @@ public class FileExercise {
         FileWriter  fw = new FileWriter("file-1.txt");
         PrintWriter pw = new PrintWriter(fw);
         
-        int nbrRecordsToWrite = getRandomNbr (1, 2);
+        int nbrRecordsToWrite = getRandomNbr (5, 20);
         for (int i = 1; i <= nbrRecordsToWrite; i++) 
         {
-            double randomDouble = (getRandomNbr (0, 100));  // 1. Use getRandomNumber to randomly create a double number between 0.00 and 100.00 (not an integer)
+            double randomDouble = (getRandomNbr (0, 10000)) / 100.0;  // 1. Use getRandomNumber to randomly create a double number between 0.00 and 100.00 (not an integer)
             int randomInt = getRandomNbr (0, 100);          //    The double number should contain only 2 numbers to the right of the decimal.
             
-            pw.println("Student#" + i);
-            pw.println(randomDouble);
-            pw.println(randomInt);
+            pw.println("Student#" + i + " ");
+            pw.println(randomDouble + " ");
+            pw.println(randomInt + " ");
             
             int randomBoolean = getRandomNbr (0, 1);
-            if (randomBoolean == 0) {pw.println(false);}
-                if (randomBoolean == 1) {pw.println(true);}
+            if (randomBoolean == 0) { pw.println(false); }
+            if (randomBoolean == 1) { pw.println(true); }
             
             pw.flush();
         }
@@ -40,7 +40,7 @@ public class FileExercise {
         
         String student = "";
         while ((student = br.readLine()) != null) {
-            System.out.println(student + "   " + br.readLine() + "   " + br.readLine() + "   " + br.readLine());
+            System.out.printf("%-11s %-6s %-4s %-7s\n", student, br.readLine(), br.readLine(), br.readLine());
         }
         br.close();
         
@@ -58,13 +58,13 @@ public class FileExercise {
              DataOutputStream output =
              new DataOutputStream(new FileOutputStream("file-2.txt"));
         ) {
-            int nbrRecordsToWrite = getRandomNbr (1, 2);
+            int nbrRecordsToWrite = getRandomNbr (5, 20);
             for (int i = 1; i <= nbrRecordsToWrite; i++) 
             {
                 output.writeUTF("Student#" + i);
                 
-                double randomDouble = (getRandomNbr (0, 100)); // 4. Use getRandomNumber to randomly create a double number between 0.00 and 100.00 (not an integer)
-                output.writeDouble(randomDouble);              //    The double number should contain only 2 numbers to the right of the decimal.
+                double randomDouble = (getRandomNbr (0, 10000)) / 100.0; // 4. Use getRandomNumber to randomly create a double number between 0.00 and 100.00 (not an integer)
+                output.writeDouble(randomDouble);                             //    The double number should contain only 2 numbers to the right of the decimal.
                 
                 int randomInt = getRandomNbr (0, 100);
                 output.writeInt(randomInt);
