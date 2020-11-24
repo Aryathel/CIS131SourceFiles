@@ -79,10 +79,7 @@ public class FileExercise {
              new DataInputStream(new FileInputStream("file-2.txt"));
         ) {
             while (true) {
-                System.out.println(input.readUTF() + "  " 
-                                       + input.readDouble() + "  " 
-                                       + input.readInt() + "  " 
-                                       + input.readBoolean());
+                System.out.printf("%-11s %-6.2f %-4d %-7s\n", input.readUTF(), input.readDouble(), input.readInt(), input.readBoolean());
             }
         }
         catch (EOFException ex) {

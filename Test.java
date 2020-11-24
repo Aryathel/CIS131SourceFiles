@@ -1,7 +1,16 @@
 public class Test {
     public static void main(String[] args) {
-        String s1 = new String("Java");
-        String s2 = s1;
-        System.out.print((s1 == s2) + " " + (s1.equals(s2)));
+        try {
+            System.out.println("Welcome to Java");
+            int i = 0;
+            int y = 2/i;
+            System.out.println("Welcome to Java");
+        }
+        catch (RuntimeException ex) {
+            System.out.println("Welcome to Java");
+        }
+        finally {
+            System.out.println("End of the block");
+        }
     }
 }
