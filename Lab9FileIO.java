@@ -17,16 +17,20 @@ public class Lab9FileIO {
     private final static String OUTPUTFILE = "lab9output.txt";
 
     public static void main(String[] args) {
+        // Temporary fields for reading input
         int empID;
         String firstName;
         String lastName;
         double hoursWorked;
         double hourlyRate;
 
+        // Create arraylist to store employees
         ArrayList<Employee> employees = new ArrayList<>();
 
+        // Create the File object
         File file = new File(FILENAME);
 
+        // Create the file reader, and put the Employees in the list
         try {
             Scanner scanner = new Scanner(file);
 
@@ -42,6 +46,7 @@ public class Lab9FileIO {
                 ));
             }
 
+            // Print employees to command line and file.
             printOutput(employees);
             writeOutput(employees);
         } catch (FileNotFoundException e) {
@@ -50,6 +55,10 @@ public class Lab9FileIO {
         }
     }
 
+    /** Prints the Employee output to the console.
+     *
+     * @param emps An ArrayList of Employees
+     */
     public static void printOutput(ArrayList<Employee> emps) {
         System.out.println(getHeader());
 
@@ -58,6 +67,10 @@ public class Lab9FileIO {
         }
     }
 
+    /** Prints the Employee output to a file.
+     *
+     * @param emps An ArrayList of Employees
+     */
     public static void writeOutput(ArrayList<Employee> emps) {
         File outfile = new File(OUTPUTFILE);
 
@@ -78,11 +91,11 @@ public class Lab9FileIO {
 
             e.printStackTrace();
         }
-
-
-
     }
 
+    /**
+     * @return A string containing the header for the Employee output.
+     */
     public static String getHeader() {
         return "------------------------------ PAYROLL REPORT ------------------------------------------\n" +
         "Employee      Employee         Pay         Hours       Regular     Overtime       Total\n" +
