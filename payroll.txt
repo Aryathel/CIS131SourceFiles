@@ -1,0 +1,4 @@
+100 lincoln abraham 40.00 25.00
+200 freud sigmund 50.00 22.50
+300 johnson lyndon 15.00 32.00
+400 curie marie 55.00 30.00
