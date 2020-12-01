@@ -1,7 +1,13 @@
-/* A. StudentName
- * 
- * 
+/**
+ * <h1>Particle Lab</h1>
+ * <p>
+ *     A demonstration of a basic provided GUI interaction, managed through particle simulation.
+ * </p>
+ * @author Houghton Mayfield
+ * @since 11/30/2020
+ * @version 1.14.5
  */
+
 import java.awt.*;
 import java.util.*;
 
@@ -19,8 +25,11 @@ public class ParticleLab{
     public static final int SAND      = 2;
     public static final int WATER     = 3;
     public static final int OIL       = 4;
-    public static final int GRAVITY   = 5;
-    public static final int SAVEFILE  = 6;
+    public static final int VAPOR     = 5;
+    public static final int GENERATOR = 6;
+    public static final int DESTRUCT  = 7;
+    public static final int GRAVITY   = 8;
+    public static final int SAVEFILE  = 9;
 
     // constants for gravity control
     public static final boolean DOWN = true;
@@ -52,15 +61,18 @@ public class ParticleLab{
 
     //SandLab constructor - ran when the above lab object is created 
     public ParticleLab(int numRows, int numCols){
-        String[] names = new String[7];
+        String[] names = new String[10];
         
-        names[EMPTY]    = "Empty";
-        names[METAL]    = "Metal";
-        names[SAND]     = "Sand";
-        names[WATER]    = "Water";
-        names[OIL]      = "Oil";
-        names[GRAVITY]  = "Gravity";
-        names[SAVEFILE] = "SaveFile";
+        names[EMPTY]     = "Empty";
+        names[METAL]     = "Metal";
+        names[SAND]      = "Sand";
+        names[WATER]     = "Water";
+        names[OIL]       = "Oil";
+        names[VAPOR]     = "Vapor";
+        names[GENERATOR] = "Generator";
+        names[DESTRUCT]  = "Destructor";
+        names[GRAVITY]   = "Gravity";
+        names[SAVEFILE]  = "SaveFile";
         
         display      = new LabDisplay("SandLab", numRows, numCols, names);  //uses the LabDisplay.class file 
         particleGrid = new int[numRows][numCols];
@@ -86,15 +98,6 @@ public class ParticleLab{
 
     //Examines each element of the 2D particleGrid and paints a color onto the display
     public void updateDisplay(){
-        //remove the below code when ready
-        Color purple = new Color (192, 0, 255);              //an example of how to create a new color
-        display.setColor(0,0,purple);                        //an example of how to display the new color
-        
-        display.setColor(0,NBR_COLS-1,Color.yellow);         //an example of how to display a named Java color
-        display.setColor(NBR_ROWS-1,0,Color.green);          //an example of how to display a named Java color
-        display.setColor(NBR_ROWS-1,NBR_COLS-1,Color.red);   //an example of how to display a named Java color
-        
-        //insert code here
         for (int i = 0; i < particleGrid.length; i++) {
             for (int j = 0; j < particleGrid[i].length; j++) {
                 if (particleGrid[i][j] == EMPTY) {
@@ -107,6 +110,12 @@ public class ParticleLab{
                     display.setColor(i, j, Color.blue);
                 } else if (particleGrid[i][j] == OIL) {
                     display.setColor(i, j, Color.darkGray);
+                } else if (particleGrid[i][j] == GENERATOR) {
+                    display.setColor(i, j, Color.green);
+                } else if (particleGrid[i][j] == DESTRUCT) {
+                    display.setColor(i, j, Color.magenta);
+                } else if (particleGrid[i][j] == VAPOR) {
+                    display.setColor(i, j, Color.lightGray);
                 }
             }
         }
@@ -133,6 +142,12 @@ public class ParticleLab{
             moveWater(row, col, gravityMod);
         } else if (particleGrid[row][col] == OIL) {
             moveOil(row, col, gravityMod);
+        } else if (particleGrid[row][col] == VAPOR) {
+            moveVapor(row, col, gravityMod);
+        } else if (particleGrid[row][col] == GENERATOR) {
+            handleGenerator(row, col, gravityMod);
+        } else if (particleGrid[row][col] == DESTRUCT) {
+            handleDestructor(row, col, gravityMod);
         }
     }
 
@@ -153,9 +168,8 @@ public class ParticleLab{
 
 
         // If the new particle locations is empty
-        if (particleGrid[newRow][col] == EMPTY) {
-            particleGrid[row][col] = EMPTY;
-            particleGrid[newRow][col] = SAND;
+        if (particleGrid[newRow][col] == EMPTY || particleGrid[newRow][col] == VAPOR) {
+            swap(newRow, col, row, col);
         } else {
             // Pick a random direction for the sand particle to move if the next
             int direction = getRandomNumber(LEFT, RIGHT);
@@ -176,13 +190,19 @@ public class ParticleLab{
             // Pile the sand diagonally if the space is available
             if (particleGrid[newRow][newCol] == EMPTY ||
                     particleGrid[newRow][newCol] == WATER ||
-                    particleGrid[newRow][newCol] == OIL) {
+                    particleGrid[newRow][newCol] == OIL ||
+                    particleGrid[newRow][newCol] == VAPOR) {
                 swap(row, col, newRow, newCol);
             }
         }
     }
 
     /** The function used to move a randomly selected water particle.
+     *
+     * Behavior:
+     * - Falls down with a little bit of random spread.
+     * - Seeks to level out when pooling together.
+     * - Solid particles fall through it.
      *
      * @param row The row of the original water particle to be moved.
      * @param col The column of the original water particle to be moved.
@@ -196,7 +216,8 @@ public class ParticleLab{
         // Wrap the row as necessary:
         newRow = wrapRow(newRow);
 
-        if (particleGrid[newRow][col] == EMPTY || particleGrid[newRow][col] == OIL) {
+        if (particleGrid[newRow][col] == EMPTY || particleGrid[newRow][col] == OIL
+                || particleGrid[newRow][col] == VAPOR) {
             direction = getLiquidDirection();
             if (direction == LEFT) {
                 newCol = col - 1;
@@ -218,16 +239,20 @@ public class ParticleLab{
 
         // Wrap the column as necessary
         newCol = wrapCol(newCol);
-        if (particleGrid[newRow][newCol] == EMPTY || particleGrid[newRow][newCol] == OIL) {
+        if (particleGrid[newRow][newCol] == EMPTY || particleGrid[newRow][newCol] == OIL ||
+                particleGrid[newRow][newCol] == VAPOR) {
             swap(row, col, newRow, newCol);
         }
     }
 
     /** The function used to move a randomly selected oil particle.
-     * The method is identical to the water method, except it will stop above water.
      *
-     * @param row The row of the original water particle to be moved.
-     * @param col The column of the original water particle to be moved.
+     * Behavior:
+     * - Floats on top of water, including rising through water.
+     * - Acts like water otherwise, solid particles fall through it.
+     *
+     * @param row The row of the original oil particle to be moved.
+     * @param col The column of the original oil particle to be moved.
      * @param gravityMod The modifier which affects the direction of the gravity.
      */
     public void moveOil(int row, int col, int gravityMod) {
@@ -261,20 +286,134 @@ public class ParticleLab{
         // Wrap the column as necessary
         newCol = wrapCol(newCol);
 
-        if (particleGrid[newRow][newCol] == EMPTY) {
+        if (particleGrid[newRow][newCol] == EMPTY ||
+                particleGrid[newRow][newCol] == VAPOR) {
             swap(row, col, newRow, newCol);
         }
     }
 
+    /** The function used to move a randomly selected vapor particle.
+     *
+     * Behavior:
+     * - Floats opposite to gravity.
+     * - Other particles fall through it.
+     * - When a vapor particle is being touched on multiple sides by other vapor particles, it turns to water and
+     *   sets all other vapor particles in a 1 pixel radius to empty.
+     * - Seeks to level with itself.
+     *
+     * @param row The row of the original vapor particle to be moved.
+     * @param col The column of the original vapor particle to be moved.
+     * @param gravityMod The modifier which affects the direction of the gravity.
+     */
+    public void moveVapor(int row, int col, int gravityMod) {
+        int vaporCount = countVaporAround(row, col);
+
+        if (vaporCount < 8) {
+            int newRow = row + (gravityMod * -1); // Moves opposite to gravity
+            int newCol = col;
+            int direction;
+
+            // Wrap the row as necessary:
+            newRow = wrapRow(newRow);
+
+            if (particleGrid[newRow][col] == EMPTY) {
+                direction = getVaporDirection();
+                if (direction == LEFT) {
+                    newCol = col - 1;
+                } else if (direction == MIDDLE) {
+                    newCol = col;
+                } else if (direction == RIGHT) {
+                    newCol = col + 1;
+                }
+            } else {
+                newRow = row;
+                direction = getRandomNumber(LEFT, RIGHT);
+                if (direction == LEFT) {
+                    newCol = col - 1;
+                } else if (direction == RIGHT) {
+                    newCol = col + 1;
+                }
+            }
+
+            // Wrap the column as necessary
+            newCol = wrapCol(newCol);
+
+            if (particleGrid[newRow][newCol] == EMPTY) {
+                swap(row, col, newRow, newCol);
+            }
+        } else {
+            particleGrid[row][col] = WATER;
+            //clearVaporAround(row, col);
+        }
+    }
+
+    /** The function used to move a randomly selected generator particle.
+     *
+     * Behavior:
+     * - 50% chance to copy any particles above (above being defined by gravity) the generator to below, as long
+     *   as there is an empty particle below.
+     *
+     * @param row The row of the generator to handle.
+     * @param col The column of the generator to handle.
+     * @param gravityMod The modifier which affects the direction of the gravity.
+     */
+    public void handleGenerator(int row, int col, int gravityMod) {
+        // Only generate half of the time
+        if (getRandomNumber(1, 2) == 2) {
+            return;
+        }
+
+        int rowSrc, rowDest;
+
+        // Get the row values for the source and destination pixels.
+        rowSrc = wrapRow(row - gravityMod);
+        rowDest = wrapRow(row + gravityMod);
+
+        // Make sure source block is acceptable, and destination block is empty
+        if (particleGrid[rowSrc][col] != EMPTY &&
+                particleGrid[rowSrc][col] != GENERATOR &&
+                particleGrid[rowSrc][col] != DESTRUCT &&
+                (particleGrid[rowDest][col] == EMPTY || particleGrid[rowDest][col] == VAPOR)) {
+            particleGrid[rowDest][col] = particleGrid[rowSrc][col];
+        }
+    }
+
+    /** The function used to move a randomly selected destructor particle.
+     *
+     * Behavior:
+     * - Removes any particles above (above being defined by gravity) the destructor, and replaces them with a vapor
+     *   particle.
+     *
+     * @param row The row of the destructor to handle.
+     * @param col The column of the destructor to handle.
+     * @param gravityMod The modifier which affects the direction of the gravity.
+     */
+    public void handleDestructor(int row, int col, int gravityMod) {
+        int rowCheck = wrapRow(row - gravityMod);
+
+        if (particleGrid[rowCheck][col] != EMPTY &&
+                particleGrid[rowCheck][col] != GENERATOR &&
+                particleGrid[rowCheck][col] != DESTRUCT) {
+            particleGrid[rowCheck][col] = VAPOR;
+        }
+    }
+
+    /** Swaps the locations of two particles.
+     *
+     * @param row1 The row of the first particle.
+     * @param col1 The column of the first particle.
+     * @param row2 The row of the second particle.
+     * @param col2 The column of the second particle.
+     */
     public void swap(int row1, int col1, int row2, int col2) {
         int tmp = particleGrid[row1][col1];
         particleGrid[row1][col1] = particleGrid[row2][col2];
         particleGrid[row2][col2] = tmp;
     }
 
-    /** Get a random direction for the water to fall in.
+    /** Get a random direction for the liquid to fall in.
      *
-     * @return The direction the water particle will be moving.
+     * @return The direction the liquid particle will be moving.
      */
     public int getLiquidDirection() {
         int selection = getRandomNumber(1, 100);
@@ -284,6 +423,77 @@ public class ParticleLab{
             return MIDDLE;
         } else {
             return RIGHT;
+        }
+    }
+
+    /** Get a random direction for the vapor to fall in.
+     *
+     * @return The direction the vapor particle will be moving.
+     */
+    public int getVaporDirection() {
+        int selection = getRandomNumber(1, 300);
+        if (selection <= 100) {
+            return LEFT;
+        } else if (selection <= 200) {
+            return MIDDLE;
+        } else {
+            return RIGHT;
+        }
+    }
+
+    /** Counts the number of nearby vapor particles to a given coordinate.
+     *
+     * @param row The current row of a vapor particle.
+     * @param col The current column of a vapor particle.
+     * @return The number of vapor particles in a 1-pixel radius.
+     */
+    public int countVaporAround(int row, int col) {
+        int count = 0;
+        int rowCheck, colCheck;
+
+        // Checking all 8 pixels in a 1 pixel radius of the center
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                rowCheck = row + i;
+                colCheck = col + j;
+
+                // Making sure the row and column being checked is viable
+                rowCheck = wrapRow(rowCheck);
+                colCheck = wrapCol(colCheck);
+
+                if (!(colCheck == col && rowCheck == row)) {
+                    if (particleGrid[rowCheck][colCheck] == VAPOR) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /** Clears all of the vapor particles in a 1-pixel radius of a selected pixel.
+     *
+     * @param row The row of the pixel to clear the vapor around.
+     * @param col The column of the pixel to clear the vapor around.
+     */
+    public void clearVaporAround(int row, int col) {
+        int rowCheck, colCheck;
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                rowCheck = row + i;
+                colCheck = col + j;
+
+                // Making sure the row and column being checked is viable
+                rowCheck = wrapRow(rowCheck);
+                colCheck = wrapCol(colCheck);
+
+                if (!(colCheck == col && rowCheck == row)) {
+                    if (particleGrid[rowCheck][colCheck] == VAPOR) {
+                        particleGrid[rowCheck][colCheck] = EMPTY;
+                    }
+                }
+            }
         }
     }
 
@@ -322,7 +532,6 @@ public class ParticleLab{
     ////////////////////////////////////////////////////
     // DO NOT modify anything below here!!! ////////////
     ////////////////////////////////////////////////////
-    
     public void run(){
         while (true){
             for (int i = 0; i < display.getSpeed(); i++){
