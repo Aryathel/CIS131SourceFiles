@@ -1,0 +1,8 @@
+------------------------------ PAYROLL REPORT ------------------------------------------
+Employee      Employee         Pay         Hours       Regular     Overtime       Total
+ Number         Name           Rate        Worked       Pay          Pay           Pay
+--------   ---------------    ------      --------    ---------   ----------     -------
+  100      abraham lincoln    25.00        40.00      1000.00         0.00       1000.00
+  200      sigmund freud      22.50        50.00       900.00       337.50       1237.50
+  300      lyndon johnson     32.00        15.00       480.00         0.00        480.00
+  400      marie curie        30.00        55.00      1200.00       675.00       1875.00
